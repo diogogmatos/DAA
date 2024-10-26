@@ -14,8 +14,8 @@ from xgboost.sklearn import XGBClassifier
 from sklearn.metrics import classification_report
 from pandas import DataFrame
 from models import decision_tree, svm, bagging, random_forest, gradient_boosting, xgboost, stacking
-from sklearn.preprocessing import LabelEncoder
-
+from sklearn.preprocessing import StandardScaler,LabelEncoder, MinMaxScaler
+from sklearn.feature_selection import chi2
 def preprocess(original_df: DataFrame, test=False) -> DataFrame:
     df = original_df.copy()
 
@@ -74,42 +74,66 @@ def preprocess(original_df: DataFrame, test=False) -> DataFrame:
     df['CenterOfMass_Z'] = com_z
 
     return df
+if __name__ == "__main__":
+    print("Loading datasets...")
+    df_train = pd.read_csv('datasets/train_radiomics_hipocamp.csv')
+    df_test = pd.read_csv('datasets/test_radiomics_hipocamp.csv')
 
-print("Loading datasets...")
-df_train = pd.read_csv('datasets/train_radiomics_hipocamp.csv')
-df_test = pd.read_csv('datasets/test_radiomics_hipocamp.csv')
+    print("Preprocessing datasets...")
+    df_train = preprocess(df_train)
+    df_test = preprocess(df_test, test=True)
 
-print("Preprocessing datasets...")
-df_train = preprocess(df_train)
-df_test = preprocess(df_test, test=True)
+    
+    X = df_train.drop('Transition', axis=1)
 
-print("Training models...")
-X = df_train.drop('Transition', axis=1)
-y = df_train['Transition']
+    y = df_train['Transition']
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=2024)
+    float_X = X.select_dtypes(include='float')
 
-# Run models
-dt_model = decision_tree(X_train, y_train, X_test, y_test)
-svm_model = svm(X_train, y_train, X_test, y_test)
-#bst_bg_model = bagging(X_train, y_train, X_test, y_test, dt_model)
-rf_model = random_forest(X_train, y_train, X_test, y_test)
-gbc_model = gradient_boosting(X_train, y_train, X_test, y_test)
-xgb_model, le = xgboost(X_train, y_train, X_test, y_test)
-stacking = stacking(X_train, y_train, X_test, y_test, dt_model, rf_model, gbc_model)
 
-# Kaggle submissions
-print("Generating submissions...")
+    normalized_float_X = MinMaxScaler().fit_transform(float_X)
+    chi2_scores, p_values = chi2(normalized_float_X, y)
 
-for name, model in zip(['decision_tree', 'svm', 'random_forest', 'gradient_boosting', 'xgboost', 'stacking'], [dt_model, svm_model, rf_model, gbc_model, xgb_model, stacking]):
-    print(f"Generating {name} submission...")
+    chi2_results = pd.DataFrame({
+        'Feature': float_X.columns,
+        'Chi2 Score': chi2_scores,
+        'p-Value': p_values
+    })
 
-    dt_predictions = model.predict(df_test)
-    if name == 'xgboost':
-        dt_predictions = le.inverse_transform(dt_predictions)
-    submission = pd.DataFrame(
-        {'RowId': df_test.index + 1, 'Result': dt_predictions})
+    chi2_results = chi2_results[chi2_results['p-Value'] < 0.05]
+    sorted_chi2_results = chi2_results.sort_values(by='Chi2 Score', ascending=False).reset_index(drop=True)
+    selected_features = sorted_chi2_results['Feature'].tolist()
 
-    with open(f'results/{name}.csv', 'w') as file:
-        submission.to_csv(file, index=False, sep=",")
+    df_train = df_train[selected_features + ['Transition']]
+    df_test = df_test[selected_features]
+
+    print("Training models...")
+    X = df_train.drop('Transition', axis=1)
+    y = df_train['Transition']
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=2024)
+
+    # Run models
+    dt_model = decision_tree(X_train, y_train, X_test, y_test)
+    svm_model = svm(X_train, y_train, X_test, y_test)
+    #bst_bg_model = bagging(X_train, y_train, X_test, y_test, dt_model)
+    rf_model = random_forest(X_train, y_train, X_test, y_test)
+    gbc_model = gradient_boosting(X_train, y_train, X_test, y_test)
+    xgb_model, le = xgboost(X_train, y_train, X_test, y_test)
+    stacking = stacking(X_train, y_train, X_test, y_test, dt_model, rf_model, gbc_model)
+
+    # Kaggle submissions
+    print("Generating submissions...")
+
+    for name, model in zip(['decision_tree', 'svm', 'random_forest', 'gradient_boosting', 'xgboost', 'stacking'], [dt_model, svm_model, rf_model, gbc_model, xgb_model, stacking]):
+        print(f"Generating {name} submission...")
+
+        dt_predictions = model.predict(df_test)
+        if name == 'xgboost':
+            dt_predictions = le.inverse_transform(dt_predictions)
+        submission = pd.DataFrame(
+            {'RowId': df_test.index + 1, 'Result': dt_predictions})
+
+        with open(f'results/{name}.csv', 'w') as file:
+            submission.to_csv(file, index=False, sep=",")
