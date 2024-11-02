@@ -14,17 +14,21 @@ from sklearn.preprocessing import LabelEncoder
 from xgboost.sklearn import XGBClassifier
 from sklearn.metrics import classification_report
 from pandas import DataFrame
+from sklearn.metrics import f1_score
 
 # Decision Tree
 def decision_tree(X_train, y_train, X_test, y_test):
-    dt_model = DecisionTreeClassifier(max_depth=2, random_state=2024)
+    dt_model = DecisionTreeClassifier(max_depth=3, random_state=2024)
     print("Fitting Decision Tree model...")
     dt_model.fit(X_train, y_train)
 
     dt_score = dt_model.score(X_test, y_test)
     print("Decision Tree Accuracy: %.2f%%" % (dt_score * 100))
 
-    return dt_model
+    f1 = f1_score(y_test, dt_model.predict(X_test), average='weighted')
+    print("Decision Tree F1 Score: %.2f" % f1)
+
+    return dt_model, dt_score, f1
 
 # Support Vector Machine
 def svm(X_train, y_train, X_test, y_test):
@@ -35,7 +39,10 @@ def svm(X_train, y_train, X_test, y_test):
     svm_score = svm_model.score(X_test, y_test)
     print("SVM Accuracy: %.2f%%" % (svm_score * 100))
 
-    return svm_model
+    f1 = f1_score(y_test, svm_model.predict(X_test), average='weighted')
+    print("SVM F1 Score: %.2f" % f1)
+
+    return svm_model, svm_score, f1
 
 # Bagging
 def bagging(X_train, y_train, X_test, y_test, dt_model):
@@ -56,38 +63,42 @@ def bagging(X_train, y_train, X_test, y_test, dt_model):
     bg_score = bst_bg_model.score(X_test, y_test)
     print("Bagging Accuracy: %.2f%%" % (bg_score * 100))
 
-    return bst_bg_model
+    f1 = f1_score(y_test, bst_bg_model.predict(X_test), average='weighted')
+    print("Bagging F1 Score: %.2f" % f1)
+
+    return bst_bg_model, bg_score, f1
 
 # Random Forest
 def random_forest(X_train, y_train, X_test, y_test):
-    rf_model = RandomForestClassifier(random_state=2024)
+    rf_model = RandomForestClassifier(random_state=2024, max_depth=3)
     print("Fitting Random Forest model...")
     rf_model.fit(X_train, y_train)
 
     rf_score = rf_model.score(X_test, y_test)
     print("Random Forest Accuracy: %.2f%%" % (rf_score * 100))
 
-    return rf_model
+    f1 = f1_score(y_test, rf_model.predict(X_test), average='weighted')
+    print("Random Forest F1 Score: %.2f" % f1)
+
+    return rf_model, rf_score, f1
 
 # Gradient Boosting
 def gradient_boosting(X_train, y_train, X_test, y_test):
-    gbc_model = GradientBoostingClassifier(random_state=2024)
+    gbc_model = GradientBoostingClassifier(random_state=2024, max_depth=3)
     print("Fitting Gradient Boosting model...")
     gbc_model.fit(X_train, y_train)
 
     gbc_score = gbc_model.score(X_test, y_test)
     print("Gradient Boosting Accuracy: %.2f%%" % (gbc_score * 100))
 
-    return gbc_model
+    f1 = f1_score(y_test, gbc_model.predict(X_test), average='weighted')
+    print("Gradient Boosting F1 Score: %.2f" % f1)
+
+    return gbc_model, gbc_score, f1
 
 # XGBoost
 def xgboost(X_train, y_train, X_test, y_test):
-    xgb_model = XGBClassifier(max_depth=1, objective='reg:squarederror')
-    
-    # transform string labels into integers
-    le = LabelEncoder()
-    y_train = le.fit_transform(y_train)
-    y_test = le.transform(y_test)
+    xgb_model = XGBClassifier(max_depth=3, objective='reg:squarederror')
 
     print("Fitting XGBoost model...")
     xgb_model.fit(X_train, y_train)
@@ -95,16 +106,22 @@ def xgboost(X_train, y_train, X_test, y_test):
     xgb_score = xgb_model.score(X_test, y_test)
     print("XGBoost Accuracy: %.2f%%" % (xgb_score * 100))
 
-    return xgb_model, le
+    f1 = f1_score(y_test, xgb_model.predict(X_test), average='weighted')
+    print("XGBoost F1 Score: %.2f" % f1)
+
+    return xgb_model, xgb_score, f1
 
 # Stacking Classifier
-def stacking(X_train, y_train, X_test, y_test, dt_model, rf_model, gbc_model):
-    estimators = [("dt", dt_model), ("rf", rf_model), ("gbc", gbc_model)]
-    st_model = StackingClassifier(estimators=estimators, final_estimator=LogisticRegression(max_iter=1000))
+def stacking(X_train, y_train, X_test, y_test, model1, model2, model3):
+    estimators = [("model1", model1), ("model2", model2), ("model3", model3)]
+    st_model = StackingClassifier(estimators=estimators, final_estimator=LogisticRegression())
     print("Fitting Stacking model...")
     st_model.fit(X_train, y_train)
 
     st_score = st_model.score(X_test, y_test)
     print("Stacking Accuracy: %.2f%%" % (st_score * 100))
 
-    return st_model
+    f1 = f1_score(y_test, st_model.predict(X_test), average='weighted')
+    print("Stacking F1 Score: %.2f" % f1)
+
+    return st_model, st_score, f1
