@@ -1,0 +1,4 @@
+criterion:squared_error
+max_depth:4
+max_features:sqrt
+n_estimators:150

@@ -3,125 +3,150 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, StratifiedShuffleSplit
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, StratifiedShuffleSplit, StratifiedKFold
 from sklearn import tree
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier, VotingClassifier, BaggingClassifier, StackingClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.base import BaseEstimator
 from sklearn.preprocessing import LabelEncoder
 from xgboost.sklearn import XGBClassifier
 from sklearn.metrics import classification_report
 from pandas import DataFrame
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, make_scorer
+import statistics
+
+def train_grid_search_cv(model_name, model, param_grid, X_train, y_train, X_test, y_test, X, y):
+    print(f"Training {model_name} model...")
+
+    scoring = make_scorer(f1_score, average='weighted')
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=987654321)
+    grid_search = GridSearchCV(estimator=model, param_grid=param_grid, scoring=scoring, n_jobs=-1, cv=cv)
+
+    print(f"> Grid Searching...")
+    grid_search.fit(X_train, y_train)
+
+    print("- Best Parameters:")
+    with open(f"data/best_params_{model_name.lower().replace(' ', '_')}.txt", "w") as file:
+        for key, value in grid_search.best_params_.items():
+            print(f"\t{key}: {value}")
+            file.write(f"{key}:{value}\n")
+
+    print("- Estimated Score (Avg. F1): %.2f" % grid_search.cv_results_['mean_test_score'].mean())
+
+    print("> Evaluating best model on test data...")
+    y_pred = grid_search.predict(X_test)
+    f1 = f1_score(y_test, y_pred, average='weighted')
+    print(f"- F1 Score: {f1:.2f}")
+
+    print("> Fitting best model on all training data...")
+    best_estimator = grid_search.best_estimator_
+    best_estimator.fit(X, y)
+    print("Done.")
+
+    return best_estimator, f1
+
+def train(model_name, model, X_train, y_train, X_test, y_test, X, y):
+    print(f"Training {model_name} model...")
+
+    print("> Fitting...")
+    model.fit(X_train, y_train)
+
+    print("> Evaluating model on test data...")
+    y_pred = model.predict(X_test)
+    f1 = f1_score(y_test, y_pred, average='weighted')
+    print(f"- F1 Score: {f1:.2f}")
+
+    print("> Fitting model on all training data...")
+    model.fit(X, y)
+    print("Done.")
+
+    return model, f1
 
 # Decision Tree
-def decision_tree(X_train, y_train, X_test, y_test):
-    dt_model = DecisionTreeClassifier(max_depth=3, random_state=987654321)
-    print("Fitting Decision Tree model...")
-    dt_model.fit(X_train, y_train)
-
-    dt_score = dt_model.score(X_test, y_test)
-    print("Decision Tree Accuracy: %.2f%%" % (dt_score * 100))
-
-    f1 = f1_score(y_test, dt_model.predict(X_test), average='weighted')
-    print("Decision Tree F1 Score: %.2f" % f1)
-
-    return dt_model, dt_score, f1
+def decision_tree():
+    model = DecisionTreeClassifier(random_state=987654321)
+    param_grid = {
+        'criterion': ['gini', 'entropy'],
+        'splitter': ['best', 'random'],
+        'max_leaf_nodes': [None, 1000],
+        'max_depth': [4, 8, 10],
+        'min_samples_split': [4, 6, 8],
+        'min_samples_leaf': [0.5, 1, 2],
+        'max_features': ['sqrt']
+    }
+    return model, param_grid
 
 # Support Vector Machine
-def svm(X_train, y_train, X_test, y_test):
+def svm():
     svm_model = SVC(random_state=987654321)
-    print("Fitting SVM model...")
-    svm_model.fit(X_train, y_train)
-
-    svm_score = svm_model.score(X_test, y_test)
-    print("SVM Accuracy: %.2f%%" % (svm_score * 100))
-
-    f1 = f1_score(y_test, svm_model.predict(X_test), average='weighted')
-    print("SVM F1 Score: %.2f" % f1)
-
-    return svm_model, svm_score, f1
+    param_grid = {
+        'C': [0.1, 1, 10],
+        'kernel': ['linear', 'rbf', 'poly', 'sigmoid'],
+        'gamma': ['scale', 'auto']
+    }
+    return svm_model, param_grid
 
 # Bagging
-def bagging(X_train, y_train, X_test, y_test, dt_model):
-    sss = StratifiedShuffleSplit(test_size=20, random_state=987654321)
+def bagging(model):
     bagging_model = BaggingClassifier(
-        estimator=dt_model, random_state=987654321)
+        estimator=model, random_state=987654321, n_jobs=-1)
+    param_grid = {
+        'n_estimators': [10, 50, 100],
+        'max_samples': [0.5, 1.0],
+        'max_features': [0.5, 1.0],
+        'bootstrap': [True, False],
+        'bootstrap_features': [True, False]
+    }
 
-    n_estimators = [10, 40, 60, 80, 100, 160]
-    parameters = {'n_estimators': n_estimators}
-    print("Grid Searching Bagging model...")
-    grid_bg = GridSearchCV(estimator=bagging_model, param_grid=parameters, cv=sss)
-    grid_bg.fit(X_train, y_train)
-
-    bst_bg_model = grid_bg.best_estimator_
-    print("Fitting Bagging model...")
-    bst_bg_model.fit(X_train, y_train)
-
-    bg_score = bst_bg_model.score(X_test, y_test)
-    print("Bagging Accuracy: %.2f%%" % (bg_score * 100))
-
-    f1 = f1_score(y_test, bst_bg_model.predict(X_test), average='weighted')
-    print("Bagging F1 Score: %.2f" % f1)
-
-    return bst_bg_model, bg_score, f1
+    return bagging_model, param_grid
 
 # Random Forest
-def random_forest(X_train, y_train, X_test, y_test):
-    rf_model = RandomForestClassifier(random_state=987654321, max_depth=2)
-    print("Fitting Random Forest model...")
-    rf_model.fit(X_train, y_train)
+def random_forest():
+    rf_model = RandomForestClassifier(random_state=987654321, n_jobs=-1)
+    param_grid = {
+        'criterion': ['gini'],
+        'min_samples_split': [4, 6, 8],
+        'min_samples_leaf': [1, 2, 4],
+        'n_estimators': [100, 150, 200],
+        'max_features': ['sqrt'],
+        'max_depth': [6, 8, 10, None],
+    }
 
-    rf_score = rf_model.score(X_test, y_test)
-    print("Random Forest Accuracy: %.2f%%" % (rf_score * 100))
-
-    f1 = f1_score(y_test, rf_model.predict(X_test), average='weighted')
-    print("Random Forest F1 Score: %.2f" % f1)
-
-    return rf_model, rf_score, f1
+    return rf_model, param_grid
 
 # Gradient Boosting
-def gradient_boosting(X_train, y_train, X_test, y_test):
-    gbc_model = GradientBoostingClassifier(random_state=987654321, max_depth=2)
-    print("Fitting Gradient Boosting model...")
-    gbc_model.fit(X_train, y_train)
+def gradient_boosting():
+    gbc_model = GradientBoostingClassifier(random_state=987654321)
+    param_grid = {
+        'n_estimators': [50, 100, 150],
+        'max_features': ['sqrt', 'log2'],
+        'criterion': ['friedman_mse', 'squared_error'],
+        'max_depth': [2, 3, 4],
+    }
 
-    gbc_score = gbc_model.score(X_test, y_test)
-    print("Gradient Boosting Accuracy: %.2f%%" % (gbc_score * 100))
-
-    f1 = f1_score(y_test, gbc_model.predict(X_test), average='weighted')
-    print("Gradient Boosting F1 Score: %.2f" % f1)
-
-    return gbc_model, gbc_score, f1
+    return gbc_model, param_grid
 
 # XGBoost
-def xgboost(X_train, y_train, X_test, y_test):
-    xgb_model = XGBClassifier(max_depth=2, objective='reg:squarederror')
+def xgboost():
+    xgb_model = XGBClassifier(objective='reg:squarederror', random_state=987654321, n_jobs=-1)
+    param_grid = {
+        'n_estimators': [50, 100, 150],
+        'learning_rate': [0.01, 0.1, 0.3],
+        'booster': ['gbtree', 'gblinear', 'dart'],
+    }
 
-    print("Fitting XGBoost model...")
-    xgb_model.fit(X_train, y_train)
-
-    xgb_score = xgb_model.score(X_test, y_test)
-    print("XGBoost Accuracy: %.2f%%" % (xgb_score * 100))
-
-    f1 = f1_score(y_test, xgb_model.predict(X_test), average='weighted')
-    print("XGBoost F1 Score: %.2f" % f1)
-
-    return xgb_model, xgb_score, f1
+    return xgb_model, param_grid
 
 # Stacking Classifier
-def stacking(X_train, y_train, X_test, y_test, model1, model2, model3):
+def stacking(model1, model2, model3):
     estimators = [("model1", model1), ("model2", model2), ("model3", model3)]
-    st_model = StackingClassifier(estimators=estimators, final_estimator=LogisticRegression())
-    print("Fitting Stacking model...")
-    st_model.fit(X_train, y_train)
+    st_model = StackingClassifier(
+        estimators=estimators, final_estimator=LogisticRegression(max_iter=1000000), n_jobs=-1, cv=5)
+    param_grid = {
+        'stack_method': ['auto', 'predict'],
+    }
 
-    st_score = st_model.score(X_test, y_test)
-    print("Stacking Accuracy: %.2f%%" % (st_score * 100))
-
-    f1 = f1_score(y_test, st_model.predict(X_test), average='weighted')
-    print("Stacking F1 Score: %.2f" % f1)
-
-    return st_model, st_score, f1
+    return st_model, param_grid

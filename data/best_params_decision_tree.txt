@@ -1,0 +1,7 @@
+criterion:entropy
+max_depth:10
+max_features:sqrt
+max_leaf_nodes:1000
+min_samples_leaf:2
+min_samples_split:8
+splitter:best
