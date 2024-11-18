@@ -83,7 +83,7 @@ def decision_tree():
 def svm():
     svm_model = SVC(random_state=987654321)
     param_grid = {
-        'C': [0.1, 1, 10],
+        'C': [2, 5, 10],
         'kernel': ['linear', 'rbf', 'poly', 'sigmoid'],
         'gamma': ['scale', 'auto']
     }
@@ -121,10 +121,10 @@ def random_forest():
 def gradient_boosting():
     gbc_model = GradientBoostingClassifier(random_state=987654321)
     param_grid = {
-        'n_estimators': [50, 100, 150],
+        'n_estimators': [200, 250, 300],
         'max_features': ['sqrt', 'log2'],
         'criterion': ['friedman_mse', 'squared_error'],
-        'max_depth': [2, 3, 4],
+        'max_depth': [2, 4, 6],
     }
 
     return gbc_model, param_grid
@@ -134,7 +134,7 @@ def xgboost():
     xgb_model = XGBClassifier(objective='reg:squarederror', random_state=987654321, n_jobs=-1)
     param_grid = {
         'n_estimators': [50, 100, 150],
-        'learning_rate': [0.01, 0.1, 0.3],
+        'learning_rate': [0.1, 0.3, 0.5],
         'booster': ['gbtree', 'gblinear', 'dart'],
     }
 

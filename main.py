@@ -185,7 +185,7 @@ def model_comparisson(model_results):
 
 def execute(selected_option, selected_models, single=False):
     print(Fore.MAGENTA + f"🚀 Running {selected_option} model{
-        "s" if selected_option in ["All", "Fast", "Slow"] else ""}...\n")
+        "s" if len(selected_models) > 1 else ""}...\n")
 
     print(Fore.BLUE + "⏳ Loading datasets...")
     df_train = pd.read_csv('datasets/train_radiomics_hipocamp.csv')
@@ -310,13 +310,13 @@ def run_models():
                 while not back2:
                     model_options = [k for k in models.keys()]
                     menu = TerminalMenu(
-                        ["<-"] + model_options, title="Select a model to run:")
-                    index = menu.show()
+                        ["<-"] + model_options, title="Select a model to run:", multi_select=True, show_multi_select_hint_text="Press SPACE to select, ENTER to confirm.", show_multi_select_hint=True, multi_select_select_on_accept=False)
+                    indexes = menu.show()
 
-                    if not index == 0 or index == None:
-                        selected_models = {
-                            model_options[index-1]: models[model_options[index-1]]}
-                        selected_option = model_options[index-1]
+                    if not 0 in indexes or indexes == None:
+                        for index in indexes:
+                            selected_models[model_options[index-1]] = models[model_options[index-1]]
+                        selected_option = ", ".join(selected_models.keys())
                         execute(selected_option, selected_models, single=True)
                     else:   
                         back2 = True
@@ -358,6 +358,9 @@ def settings():
 
 
 def main():
+    global SETTINGS
+    SETTINGS = read_settings()
+
     exit = False
     while not exit:
         options = ["Run Models", "Settings", "Exit"]

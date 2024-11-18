@@ -1,4 +1,4 @@
-criterion:squared_error
+criterion:friedman_mse
 max_depth:4
-max_features:sqrt
-n_estimators:150
+max_features:log2
+n_estimators:250
