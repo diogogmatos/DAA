@@ -1,22 +1,12 @@
-import sklearn as skl
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, StratifiedShuffleSplit, StratifiedKFold
-from sklearn import tree
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import GradientBoostingClassifier, VotingClassifier, BaggingClassifier, StackingClassifier
+from sklearn.ensemble import GradientBoostingClassifier, BaggingClassifier, StackingClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.base import BaseEstimator
-from sklearn.preprocessing import LabelEncoder
 from xgboost.sklearn import XGBClassifier
-from sklearn.metrics import classification_report
-from pandas import DataFrame
 from sklearn.metrics import f1_score, make_scorer
-import statistics
+
 
 def train_grid_search_cv(model_name, model, param_grid, X_train, y_train, X_test, y_test, X, y):
     print(f"Training {model_name} model...")
