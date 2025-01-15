@@ -93,6 +93,10 @@ def bagging(model):
 
     return bagging_model, param_grid
 
+def customBagging():
+    # TODO
+    pass
+
 # Random Forest
 def random_forest():
     rf_model = RandomForestClassifier(random_state=987654321, n_jobs=-1)

@@ -26,7 +26,7 @@ from simple_term_menu import TerminalMenu
 
 
 import settings
-from models import decision_tree, svm, bagging, random_forest, gradient_boosting, xgboost, stacking, train_grid_search_cv, train
+from models import decision_tree, svm, bagging, random_forest, gradient_boosting, xgboost, stacking, train_grid_search_cv, train,customBagging
 from preprocessing import preprocess, feature_engineering
 
 
@@ -125,7 +125,8 @@ def run_models():
         "XGBoost": xgboost,
         "SVM": svm,
         "Gradient Boosting": gradient_boosting,
-        "Bagging": bagging
+        "Bagging": bagging,
+        "CustomBagging": custom_bagging
     }
     groups = {
         "All": {
@@ -133,7 +134,9 @@ def run_models():
             "Random Forest": random_forest,
             "XGBoost": xgboost,
             "SVM": svm,
-            "Gradient Boosting": gradient_boosting
+            "Gradient Boosting": gradient_boosting,
+            "CustomBagging": custom_bagging
+
         },
         "Fast": {
             "Decision Tree": decision_tree,
