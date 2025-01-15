@@ -83,8 +83,7 @@ def rfe(X_train, X_test, y_train, y_test, X, y, df_test: DataFrame, N: int | flo
             with open('data/rfecv_selected_features.txt', 'r') as file:
                 selected_features = file.read().splitlines()
                 print("- 📁 Found cached selection.")
-                print(Fore.YELLOW + f"- 🧹 Removed {X_train.shape[1] - len(
-                    selected_features)} features (New total: {len(selected_features)}).")
+                print(Fore.YELLOW + f"- 🧹 Removed {X_train.shape[1] - len(selected_features)} features (New total: {len(selected_features)}).")
         except FileNotFoundError:
             pass
 
@@ -100,8 +99,7 @@ def rfe(X_train, X_test, y_train, y_test, X, y, df_test: DataFrame, N: int | flo
                     scoring='f1_macro', n_jobs=-1)
         rfe.fit(X_train, y_train)
 
-        print(Fore.YELLOW + f"- 🧹 Removed {
-              X_train.shape[1] - rfe.n_features_} features (New total: {rfe.n_features_}).")
+        print(Fore.YELLOW + f"- 🧹 Removed {X_train.shape[1] - rfe.n_features_} features (New total: {rfe.n_features_}).")
 
         selected_features = X_train.columns[rfe.support_]
 
