@@ -33,7 +33,7 @@ def train_grid_search_cv(model_name, model, param_grid, X_train, y_train, X_test
 
     print("> Fitting best model on all training data...")
     best_estimator = grid_search.best_estimator_
-    best_estimator.fit(X, y)
+    best_estimator.fit(X, y.values.ravel())
     print("Done.")
 
     return best_estimator, f1
@@ -50,7 +50,7 @@ def train(model_name, model, X_train, y_train, X_test, y_test, X, y):
     print(f"- F1 Score: {f1:.2f}")
 
     print("> Fitting model on all training data...")
-    model.fit(X, y)
+    model.fit(X, y.values.ravel())
     print("Done.")
 
     return model, f1
@@ -134,7 +134,7 @@ def xgboost():
 def stacking(model1, model2, model3):
     estimators = [("model1", model1), ("model2", model2), ("model3", model3)]
     st_model = StackingClassifier(
-        estimators=estimators, final_estimator=LogisticRegression(max_iter=1000000), n_jobs=-1, cv=5)
+        estimators=estimators, final_estimator=LogisticRegression(max_iter=1000000, n_jobs=-1), n_jobs=-1, cv=5)
     param_grid = {
         'stack_method': ['auto', 'predict'],
     }

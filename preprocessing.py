@@ -69,7 +69,7 @@ def preprocess(original_df: DataFrame, mode="normal"):
         X = pd.DataFrame(scaler.fit_transform(X), columns=X.columns)
 
         # apply label encoding
-        y = le.fit_transform(y)
+        y = pd.DataFrame(le.fit_transform(y))
 
         return X, y
     
@@ -118,7 +118,7 @@ def rfe(X_train, X_test, y_train, y_test, X, y, df_test: DataFrame, N: int | flo
     return X_train_rfe, X_test_rfe, X_rfe, df_test_rfe
 
 
-def feature_engineering(X_train, X_test, y_train, y_test, X, y, df_test):
+def feature_selection_balancing(X_train, X_test, y_train, y_test, X, y, df_test):
     if "RFECV" in settings.SELECTED:
         print(Fore.BLUE + "> 🧐 Performing Recursive Feature Elimination..." + Fore.WHITE)
         X_train_rfe, X_test_rfe, X_rfe, df_test_rfe = rfe(
@@ -137,6 +137,7 @@ def feature_engineering(X_train, X_test, y_train, y_test, X, y, df_test):
         y_train = y_train_smote
         print()
 
+    # since this is a non-linear problem, PCA is not recommended
     if "PCA" in settings.SELECTED:
         print(Fore.BLUE + "> 🧐 Performing Principal Component Analysis" + Fore.WHITE)
         pca = PCA(n_components=0.995, random_state=987654321) # 99% of variance

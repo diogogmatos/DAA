@@ -27,7 +27,8 @@ from simple_term_menu import TerminalMenu
 
 import settings
 from models import decision_tree, svm, bagging, random_forest, gradient_boosting, xgboost, stacking, train_grid_search_cv, train
-from preprocessing import preprocess, feature_engineering
+from preprocessing import preprocess, feature_selection_balancing
+import ann as neural_network
 
 
 def model_comparisson(model_results):
@@ -40,7 +41,7 @@ def model_comparisson(model_results):
     print()
 
 
-def execute(selected_option, selected_models):
+def execute(selected_option, selected_models, ann=False):
     print(Fore.MAGENTA + f"🚀 Running {selected_option} model{
         "s" if len(selected_models) > 1 else ""}...\n")
 
@@ -56,17 +57,23 @@ def execute(selected_option, selected_models):
     print()
 
     print(Fore.BLUE + "🔍 Feature engineering...\n")
-    X_train, X_test, y_train, y_test, X, df_test = feature_engineering(
+    X_train, X_test, y_train, y_test, X, df_test = feature_selection_balancing(
         X_train, X_test, y_train, y_test, X, y, df_test)
 
     print(Fore.BLUE + "⚙️ Training...\n" + Fore.WHITE)
     # run models
     model_results = {}
     for model_name, model_function in selected_models.items():
-        model, param_grid = model_function()
-        model, score = train_grid_search_cv(
-            model_name, model, param_grid, X_train, y_train, X_test, y_test, X, y)
-        model_results[model_name] = [model, score]
+        if ann:
+            model = model_function(X.shape[1], len(le.classes_))
+            train_dl, test_dl = neural_network.prepare_train_data(X, y, 0.33)
+            model, score = neural_network.train_model(train_dl, test_dl, model, epochs=50, lr=0.001)
+            model_results[model_name] = [model, score]
+        else:
+            model, param_grid = model_function()
+            model, score = train_grid_search_cv(
+                model_name, model, param_grid, X_train, y_train, X_test, y_test, X, y)
+            model_results[model_name] = [model, score]
         print()
     print()
 
@@ -108,7 +115,11 @@ def execute(selected_option, selected_models):
     for name, model in model_results.items():
 
         print(Fore.WHITE + f"Generating {name} submission...")
-        dt_predictions = model[0].predict(df_test)
+        dt_predictions = None
+        if ann:
+            dt_predictions = neural_network.get_predictions(model[0], df_test)
+        else:
+            dt_predictions = model[0].predict(df_test)
         dt_predictions = le.inverse_transform(dt_predictions)
 
         submission = pd.DataFrame(
@@ -184,17 +195,64 @@ def run_models():
             back1 = True
 
 
+def run_ann_models():
+    models = {
+        "MLP": neural_network.mlp
+    }
+    groups = {
+        "All": {
+            "MLP": neural_network.mlp
+        }
+    }
+
+    back1 = False
+    while not back1:
+        selected_models = {}
+        group_options = ["<-"] + [k for k in groups.keys()] + ["Individual"]
+        menu = TerminalMenu(
+            group_options, title="Models to run:")
+        index = menu.show()
+        if index == None:
+            break
+        selected_option = group_options[index]
+        single = selected_option == "Individual"
+        back1 = selected_option == "<-"
+
+        if not back1:
+            if single:
+                back2 = False
+                while not back2:
+                    model_options = [k for k in models.keys()]
+                    menu = TerminalMenu(
+                        ["<-"] + model_options, title="Select a model to run:", multi_select=True, show_multi_select_hint_text="Press SPACE to select, ENTER to confirm.", show_multi_select_hint=True, multi_select_select_on_accept=False)
+                    indexes = menu.show()
+
+                    if not 0 in indexes or indexes == None:
+                        for index in indexes:
+                            selected_models[model_options[index-1]] = models[model_options[index-1]]
+                        selected_option = ", ".join(selected_models.keys())
+                        execute(selected_option, selected_models, ann=True)
+                    else:
+                        back2 = True
+            else:
+                selected_models = groups[selected_option]
+                execute(selected_option, selected_models, ann=True)
+
+
+
 def main():
     exit = False
     while not exit:
-        options = ["Run Models", "Settings", "Exit"]
+        options = ["Run Models", "Run ANN Models", "Settings", "Exit"]
         menu = TerminalMenu(options, title="Welcome")
         index = menu.show()
         if index == 0:
             run_models()
         elif index == 1:
+            run_ann_models()
+        elif index == 2:
             settings.show()
-        elif index == 2 or index == None:
+        elif index == 3 or index == None:
             exit = True
 
 
