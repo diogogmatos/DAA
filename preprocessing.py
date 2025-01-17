@@ -12,11 +12,7 @@ from colorama import Fore
 
 
 import settings
-
-
-def preprocess(original_df: DataFrame, mode="normal"):
-    df = original_df.copy()
-
+def drop_const(df:DataFrame):
     # drop columns that always have the same value
     unique_dict = df.nunique().to_dict()
     no_unique_values = {col: count for col,
@@ -24,10 +20,24 @@ def preprocess(original_df: DataFrame, mode="normal"):
     drop = [col for col, _ in no_unique_values.items()]
     df.drop(drop, axis=1, inplace=True)
 
+def drop_unique(df:DataFrame):
     # drop categorical columns that always have unique values
+    unique_dict = df.nunique().to_dict()
     all_unique = [col for col, count in unique_dict.items(
     ) if count == df.shape[0] and df[col].dtype == 'object']
     df.drop(all_unique, axis=1, inplace=True)
+    return df
+
+
+
+
+
+def preprocess(original_df: DataFrame, mode="normal",stratify=None):
+    df = original_df.copy()
+    
+    df_ = drop_unique(df)
+    df_ = drop_const(df_)
+    
 
     scaler = StandardScaler()
     le = LabelEncoder()
@@ -41,8 +51,12 @@ def preprocess(original_df: DataFrame, mode="normal"):
         y = df['Transition']
 
         # split data
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=987654321)
+        if stratify != None:
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y,stratify=y , test_size=0.2, random_state=987654321)
+        else:
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.2, random_state=987654321)
 
         # apply standard scaling
         X_train = pd.DataFrame(scaler.fit_transform(
@@ -69,9 +83,21 @@ def preprocess(original_df: DataFrame, mode="normal"):
         X = pd.DataFrame(scaler.fit_transform(X), columns=X.columns)
 
         # apply label encoding
-        y = le.fit_transform(y)
+        y = pd.DataFrame(le.fit_transform(y))
 
-        return X, y
+        return X, y,le
+    elif mode == "no_split":
+        # separate features and target
+        X = df.drop('Transition', axis=1)
+        y = df['Transition']
+
+        # apply standard scaling
+        X = pd.DataFrame(scaler.fit_transform(X), columns=X.columns)
+
+        # apply label encoding
+        y = pd.DataFrame(le.fit_transform(y))
+        
+        return pd.concat([X, pd.Series(y.values, name='Transition')], axis=1),le,scaler
     
 
 def rfe(X_train, X_test, y_train, y_test, X, y, df_test: DataFrame, N: int | float | None = None):    
