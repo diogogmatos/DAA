@@ -72,19 +72,19 @@ class MLP(Module):
         super(MLP, self).__init__()
 
         # 1st layer
-        self.hidden1 = Linear(n_inputs, 256)
+        self.hidden1 = Linear(n_inputs, 512)
         kaiming_uniform_(self.hidden1.weight, nonlinearity='relu')
         self.act1 = ReLU()
         # 2nd layer
-        self.hidden2 = Linear(256, 128)
+        self.hidden2 = Linear(512, 256)
         kaiming_uniform_(self.hidden2.weight, nonlinearity='relu')
         self.act2 = ReLU()
         # 3rd layer
-        self.hidden3 = Linear(128, 64)
+        self.hidden3 = Linear(256, 128)
         kaiming_uniform_(self.hidden3.weight, nonlinearity='relu')
         self.act3 = ReLU()
         # 4th layer
-        self.hidden4 = Linear(64, num_classes)
+        self.hidden4 = Linear(128, num_classes)
         xavier_uniform_(self.hidden4.weight)
         self.act4 = Softmax(dim=1)
 

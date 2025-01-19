@@ -16,7 +16,6 @@ import settings
 
 def preprocess(original_df: DataFrame, mode="normal"):
     df = original_df.copy()
-
     # drop columns that always have the same value
     unique_dict = df.nunique().to_dict()
     no_unique_values = {col: count for col,
