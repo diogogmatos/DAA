@@ -13,6 +13,24 @@ from colorama import Fore
 
 import settings
 
+def drop_constant(df):
+    # drop columns that always have the same value
+    unique_dict = df.nunique().to_dict()
+    no_unique_values = {col: count for col,
+                        count in unique_dict.items() if count == 1}
+    drop = [col for col, _ in no_unique_values.items()]
+    df.drop(drop, axis=1, inplace=True)
+    return df
+
+def drop_unique(df):
+    # drop columns that always have the same value
+    unique_dict = df.nunique().to_dict()
+
+    # drop categorical columns that always have unique values
+    all_unique = [col for col, count in unique_dict.items(
+    ) if count == df.shape[0] and df[col].dtype == 'object']
+    df.drop(all_unique, axis=1, inplace=True)
+    return df
 
 def preprocess(original_df: DataFrame, mode="normal"):
     df = original_df.copy()
