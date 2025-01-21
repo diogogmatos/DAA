@@ -15,7 +15,7 @@ import settings
 
 
 def drop_constant(df):
-    # drop columns that always have the same value
+    "drop columns that always have the same value"
     unique_dict = df.nunique().to_dict()
     no_unique_values = {col: count for col,
                         count in unique_dict.items() if count == 1}
@@ -23,9 +23,9 @@ def drop_constant(df):
     df.drop(drop, axis=1, inplace=True)
     return df
 
-
 def drop_unique(df):
-    # drop categorical columns that always have unique values
+    "drop categorical columns that always have unique values"
+    
     unique_dict = df.nunique().to_dict()
     all_unique = [col for col, count in unique_dict.items(
     ) if count == df.shape[0] and df[col].dtype == 'object']
@@ -92,7 +92,6 @@ def preprocess(original_df: DataFrame, mode="normal"):
         return X_train, X_test, y_train, y_test, le
     elif mode == "test":
         # apply standard scaling
-        scaler = StandardScaler()
         df = pd.DataFrame(scaler.fit_transform(df), columns=df.columns)
 
         return df
@@ -154,8 +153,8 @@ def rfe(X_train, X_test, y_train, y_test, X, y, df_test: DataFrame, N: int | flo
     return X_train_rfe, X_test_rfe, X_rfe, df_test_rfe
 
 
-def feature_selection_balancing(X_train, X_test, y_train, y_test, X, y, df_test):
-    if "RFECV" in settings.SELECTED:
+def feature_selection_balancing(X_train, X_test, y_train, y_test, X, y, df_test,arg_settings = {}):
+    if "RFECV" in settings.SELECTED or "RFECV" in arg_settings :
         print(Fore.BLUE + "> 🧐 Performing Recursive Feature Elimination..." + Fore.WHITE)
         X_train_rfe, X_test_rfe, X_rfe, df_test_rfe = rfe(
             X_train, X_test, y_train, y_test, X, y, df_test, 0.7)
@@ -165,7 +164,7 @@ def feature_selection_balancing(X_train, X_test, y_train, y_test, X, y, df_test)
         df_test = df_test_rfe
         print()
 
-    if "SMOTE" in settings.SELECTED:
+    if "SMOTE" in settings.SELECTED or "SMOTE" in arg_settings:
         print(Fore.BLUE + "> ⚖️ Balancing classes with SMOTE..." + Fore.WHITE)
         smote = SMOTE(random_state=987654321)
         X_train_smote, y_train_smote = smote.fit_resample(X_train, y_train)
@@ -174,7 +173,7 @@ def feature_selection_balancing(X_train, X_test, y_train, y_test, X, y, df_test)
         print()
 
     # since this is a non-linear problem, PCA is not recommended
-    if "PCA" in settings.SELECTED:
+    if "PCA" in settings.SELECTED or "PCA" in arg_settings:
         print(Fore.BLUE + "> 🧐 Performing Principal Component Analysis" + Fore.WHITE)
         # 99% of variance
         pca = PCA(n_components=0.995, random_state=987654321)
