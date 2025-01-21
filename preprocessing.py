@@ -13,6 +13,7 @@ from colorama import Fore
 
 import settings
 
+
 def drop_constant(df):
     # drop columns that always have the same value
     unique_dict = df.nunique().to_dict()
@@ -22,29 +23,47 @@ def drop_constant(df):
     df.drop(drop, axis=1, inplace=True)
     return df
 
-def drop_unique(df):
-    # drop columns that always have the same value
-    unique_dict = df.nunique().to_dict()
 
+def drop_unique(df):
     # drop categorical columns that always have unique values
+    unique_dict = df.nunique().to_dict()
     all_unique = [col for col, count in unique_dict.items(
     ) if count == df.shape[0] and df[col].dtype == 'object']
     df.drop(all_unique, axis=1, inplace=True)
     return df
 
+
+def drop_duplicate(df):
+    # drop identical columns
+    groups = df.columns.to_series().groupby(df.dtypes).groups
+    dups = []
+    for t, v in groups.items():
+        dcols = df[v].to_dict(orient="list")
+
+        vs = list(dcols.values())
+        ks = list(dcols.keys())
+        lvs = len(vs)
+
+        for i in range(lvs):
+            for j in range(i+1,lvs):
+                if vs[i] == vs[j]: 
+                    dups.append(ks[i])
+                    break
+
+    df.drop(dups, axis=1, inplace=True)
+    return df
+
+
 def preprocess(original_df: DataFrame, mode="normal"):
     df = original_df.copy()
     # drop columns that always have the same value
-    unique_dict = df.nunique().to_dict()
-    no_unique_values = {col: count for col,
-                        count in unique_dict.items() if count == 1}
-    drop = [col for col, _ in no_unique_values.items()]
-    df.drop(drop, axis=1, inplace=True)
+    df = drop_constant(df)
 
     # drop categorical columns that always have unique values
-    all_unique = [col for col, count in unique_dict.items(
-    ) if count == df.shape[0] and df[col].dtype == 'object']
-    df.drop(all_unique, axis=1, inplace=True)
+    df = drop_unique(df)
+
+    # drop identical columns
+    df = drop_duplicate(df)
 
     scaler = StandardScaler()
     le = LabelEncoder()
@@ -89,9 +108,9 @@ def preprocess(original_df: DataFrame, mode="normal"):
         y = pd.DataFrame(le.fit_transform(y))
 
         return X, y
-    
 
-def rfe(X_train, X_test, y_train, y_test, X, y, df_test: DataFrame, N: int | float | None = None):    
+
+def rfe(X_train, X_test, y_train, y_test, X, y, df_test: DataFrame, N: int | float | None = None):
     selected_features = None
 
     # check for cached selected features
@@ -157,12 +176,14 @@ def feature_selection_balancing(X_train, X_test, y_train, y_test, X, y, df_test)
     # since this is a non-linear problem, PCA is not recommended
     if "PCA" in settings.SELECTED:
         print(Fore.BLUE + "> 🧐 Performing Principal Component Analysis" + Fore.WHITE)
-        pca = PCA(n_components=0.995, random_state=987654321) # 99% of variance
+        # 99% of variance
+        pca = PCA(n_components=0.995, random_state=987654321)
         X_train_pca = pca.fit_transform(X_train)
         X_test_pca = pca.transform(X_test)
         df_test_pca = pca.transform(df_test)
         X_pca = pca.transform(X)
-        print(Fore.YELLOW + f"- 🧹 Reduced {X_train.shape[1] - pca.n_components_} features (New total: {pca.n_components_}).")
+        print(Fore.YELLOW + f"- 🧹 Reduced {
+              X_train.shape[1] - pca.n_components_} features (New total: {pca.n_components_}).")
         X_train = pd.DataFrame(X_train_pca)
         X_test = pd.DataFrame(X_test_pca)
         df_test = pd.DataFrame(df_test_pca)
