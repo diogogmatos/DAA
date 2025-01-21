@@ -1,0 +1,257 @@
+[
+  {
+    "model": "Decision Tree",
+    "treatment": [],
+    "done": true,
+    "results": {
+      "AD-AD": {
+        "precision": 0.23529411764705882,
+        "recall": 0.3333333333333333,
+        "f1-score": 0.27586206896551724,
+        "support": 12.0
+      },
+      "CN-CN": {
+        "precision": 0.5625,
+        "recall": 0.42857142857142855,
+        "f1-score": 0.4864864864864865,
+        "support": 21.0
+      },
+      "CN-MCI": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "MCI-AD": {
+        "precision": 0.36363636363636365,
+        "recall": 0.2222222222222222,
+        "f1-score": 0.27586206896551724,
+        "support": 18.0
+      },
+      "MCI-MCI": {
+        "precision": 0.2,
+        "recall": 0.3333333333333333,
+        "f1-score": 0.25,
+        "support": 9.0
+      },
+      "accuracy": 0.32786885245901637,
+      "macro avg": {
+        "precision": 0.27228609625668454,
+        "recall": 0.2634920634920635,
+        "f1-score": 0.25764212488350424,
+        "support": 61.0
+      },
+      "weighted avg": {
+        "precision": 0.3767456386429386,
+        "recall": 0.32786885245901637,
+        "f1-score": 0.3400340702488809,
+        "support": 61.0
+      }
+    }
+  },
+  {
+    "model": "Decision Tree",
+    "treatment": [
+      "SMOTE"
+    ],
+    "done": true,
+    "results": {
+      "accuracy": 0.36065573770491804,
+      "macro avg": {
+        "precision": 0.2656140350877193,
+        "recall": 0.29047619047619044,
+        "f1-score": 0.26306878306878306,
+        "support": 61.0
+      },
+      "weighted avg": {
+        "precision": 0.36824849007765315,
+        "recall": 0.36065573770491804,
+        "f1-score": 0.3488030184751496,
+        "support": 61.0
+      },
+      "AD-AD": {
+        "precision": 0.26666666666666666,
+        "recall": 0.3333333333333333,
+        "f1-score": 0.2962962962962963,
+        "support": 12.0
+      },
+      "CN-CN": {
+        "precision": 0.6842105263157895,
+        "recall": 0.6190476190476191,
+        "f1-score": 0.65,
+        "support": 21.0
+      },
+      "CN-MCI": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "MCI-AD": {
+        "precision": 0.16666666666666666,
+        "recall": 0.05555555555555555,
+        "f1-score": 0.08333333333333333,
+        "support": 18.0
+      },
+      "MCI-MCI": {
+        "precision": 0.21052631578947367,
+        "recall": 0.4444444444444444,
+        "f1-score": 0.2857142857142857,
+        "support": 9.0
+      }
+    },
+    "params": {
+      "criterion": "gini",
+      "max_depth": 8,
+      "max_features": "sqrt",
+      "max_leaf_nodes": 1000,
+      "min_samples_leaf": 1,
+      "min_samples_split": 6,
+      "splitter": "random"
+    }
+  },
+  {
+    "model": "Decision Tree",
+    "treatment": [
+      "RFECV"
+    ]
+  },
+  {
+    "model": "Decision Tree",
+    "treatment": [
+      "SMOTE",
+      "RFECV"
+    ]
+  },
+  {
+    "model": "Random Forest",
+    "treatment": []
+  },
+  {
+    "model": "Random Forest",
+    "treatment": [
+      "SMOTE"
+    ]
+  },
+  {
+    "model": "Random Forest",
+    "treatment": [
+      "RFECV"
+    ]
+  },
+  {
+    "model": "Random Forest",
+    "treatment": [
+      "SMOTE",
+      "RFECV"
+    ]
+  },
+  {
+    "model": "XGBoost",
+    "treatment": [
+      "PCA"
+    ]
+  },
+  {
+    "model": "XGBoost",
+    "treatment": [
+      "SMOTE"
+    ]
+  },
+  {
+    "model": "XGBoost",
+    "treatment": [
+      "RFECV"
+    ]
+  },
+  {
+    "model": "XGBoost",
+    "treatment": [
+      "SMOTE",
+      "RFECV"
+    ]
+  },
+  {
+    "model": "XGBoost",
+    "treatment": [
+      "PCA",
+      "SMOTE"
+    ]
+  },
+  {
+    "model": "XGBoost",
+    "treatment": []
+  },
+  {
+    "model": "SVM",
+    "treatment": [
+      "PCA"
+    ]
+  },
+  {
+    "model": "SVM",
+    "treatment": [
+      "SMOTE"
+    ]
+  },
+  {
+    "model": "SVM",
+    "treatment": [
+      "RFECV"
+    ]
+  },
+  {
+    "model": "SVM",
+    "treatment": [
+      "SMOTE",
+      "RFECV"
+    ]
+  },
+  {
+    "model": "SVM",
+    "treatment": [
+      "PCA",
+      "SMOTE"
+    ]
+  },
+  {
+    "model": "SVM",
+    "treatment": []
+  },
+  {
+    "model": "Gradient Boosting",
+    "treatment": [
+      "PCA"
+    ]
+  },
+  {
+    "model": "Gradient Boosting",
+    "treatment": [
+      "SMOTE"
+    ]
+  },
+  {
+    "model": "Gradient Boosting",
+    "treatment": [
+      "RFECV"
+    ]
+  },
+  {
+    "model": "Gradient Boosting",
+    "treatment": [
+      "SMOTE",
+      "RFECV"
+    ]
+  },
+  {
+    "model": "Gradient Boosting",
+    "treatment": [
+      "PCA",
+      "SMOTE"
+    ]
+  },
+  {
+    "model": "Gradient Boosting",
+    "treatment": []
+  }
+]

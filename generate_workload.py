@@ -1,6 +1,6 @@
 import pandas as pd
 import os
-from ..models import *
+from models import *
 from itertools import chain, combinations
 import json
 
@@ -18,24 +18,28 @@ def mkdir_if_not_exists(path):
 
 VERSION = "0.0"
 
+models = {
+    "Decision Tree": {
+        "model": decision_tree,
+        "fast": True,
+        "incompatible": {"PCA"},
+    },
+    "Random Forest": {
+        "model": random_forest,
+        "fast": True,
+        "incompatible": {"PCA"},
+    },
+    "XGBoost": {"model": xgboost, "incompatible": set()},
+    "SVM": {"model": svm, "fast": True, "incompatible": set()},
+    "Gradient Boosting": {"model": gradient_boosting, "incompatible": set()},
+    # "Bagging": {"model": bagging, "incompatible": set()},
+}
+
 if __name__ == "__main__":
-    mkdir_if_not_exists("exaustive_model_evaluation")
-    models = {
-        "Decision Tree": {
-            "model": decision_tree,
-            "fast": True,
-            "incompatible": {"PCA"},
-        },
-        "Random Forest": {
-            "model": random_forest,
-            "fast": True,
-            "incompatible": {"PCA"},
-        },
-        "XGBoost": {"model": xgboost, "incompatible": set()},
-        "SVM": {"model": svm, "fast": True, "incompatible": set()},
-        "Gradient Boosting": {"model": gradient_boosting, "incompatible": set()},
-        "Bagging": {"model": bagging, "incompatible": set()},
-    }
+
+    print("remember to update VERSION and models, if needed!")
+    mkdir_if_not_exists(f"exaustive_model_evaluation/{VERSION}/")
+
 
     treatments = {"RFECV", "SMOTE", "PCA"}
 
@@ -70,7 +74,8 @@ if __name__ == "__main__":
 
             l.append({'model':model_name,'treatment':list(treatment)})
     
-    print(json.dumps(l,indent=2))
+    with open(f"exaustive_model_evaluation/{VERSION}/workload.json","w+") as file:
+        json.dump(l,file,indent=2)
 
 
     

@@ -71,7 +71,7 @@ def execute(selected_option, selected_models, ann=False):
             model_results[model_name] = [model, score]
         else:
             model, param_grid = model_function()
-            model, score = train_grid_search_cv(
+            model, score,_,_ = train_grid_search_cv(
                 model_name, model, param_grid, X_train, y_train, X_test, y_test, X, y)
             model_results[model_name] = [model, score]
         print()
@@ -97,7 +97,7 @@ def execute(selected_option, selected_models, ann=False):
             top1, top2, top3 = list(model_results.items())[:3]
             stack, param_grid = stacking(
                 top1[1][0], top2[1][0], top3[1][0])
-            stack, stack_score = train_grid_search_cv(
+            stack, stack_score,_,_ = train_grid_search_cv(
                 'Stacking', stack, param_grid, X_train, y_train, X_test, y_test, X, y)
             model_results['stacking'] = [stack, stack_score]
             print()

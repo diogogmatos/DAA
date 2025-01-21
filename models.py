@@ -5,7 +5,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier, BaggingClassifier, StackingClassifier
 from sklearn.linear_model import LogisticRegression
 from xgboost.sklearn import XGBClassifier
-from sklearn.metrics import f1_score, make_scorer
+from sklearn.metrics import f1_score, make_scorer, classification_report
 
 
 def train_grid_search_cv(model_name, model, param_grid, X_train, y_train, X_test, y_test, X, y):
@@ -35,8 +35,8 @@ def train_grid_search_cv(model_name, model, param_grid, X_train, y_train, X_test
     best_estimator = grid_search.best_estimator_
     best_estimator.fit(X, y.values.ravel())
     print("Done.")
-
-    return best_estimator, f1
+    
+    return best_estimator, f1, classification_report(y_test,y_pred,output_dict=True),grid_search.best_params_
 
 def train(model_name, model, X_train, y_train, X_test, y_test, X, y):
     print(f"Training {model_name} model...")

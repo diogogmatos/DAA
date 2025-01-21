@@ -2,6 +2,6 @@ criterion:gini
 max_depth:8
 max_features:sqrt
 max_leaf_nodes:1000
-min_samples_leaf:2
+min_samples_leaf:1
 min_samples_split:6
-splitter:best
+splitter:random

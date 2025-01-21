@@ -154,7 +154,7 @@ def rfe(X_train, X_test, y_train, y_test, X, y, df_test: DataFrame, N: int | flo
 
 
 def feature_selection_balancing(X_train, X_test, y_train, y_test, X, y, df_test,arg_settings = {}):
-    if "RFECV" in settings.SELECTED or "RFECV" in arg_settings :
+    if   "RFECV" in arg_settings if arg_settings else "RFECV" in settings.SELECTED  :
         print(Fore.BLUE + "> 🧐 Performing Recursive Feature Elimination..." + Fore.WHITE)
         X_train_rfe, X_test_rfe, X_rfe, df_test_rfe = rfe(
             X_train, X_test, y_train, y_test, X, y, df_test, 0.7)
@@ -164,7 +164,7 @@ def feature_selection_balancing(X_train, X_test, y_train, y_test, X, y, df_test,
         df_test = df_test_rfe
         print()
 
-    if "SMOTE" in settings.SELECTED or "SMOTE" in arg_settings:
+    if "SMOTE" in arg_settings if arg_settings else "SMOTE" in settings.SELECTED:
         print(Fore.BLUE + "> ⚖️ Balancing classes with SMOTE..." + Fore.WHITE)
         smote = SMOTE(random_state=987654321)
         X_train_smote, y_train_smote = smote.fit_resample(X_train, y_train)
@@ -173,7 +173,7 @@ def feature_selection_balancing(X_train, X_test, y_train, y_test, X, y, df_test,
         print()
 
     # since this is a non-linear problem, PCA is not recommended
-    if "PCA" in settings.SELECTED or "PCA" in arg_settings:
+    if "PCA" in arg_settings if arg_settings else "PCA" in settings.SELECTED:
         print(Fore.BLUE + "> 🧐 Performing Principal Component Analysis" + Fore.WHITE)
         # 99% of variance
         pca = PCA(n_components=0.995, random_state=987654321)
