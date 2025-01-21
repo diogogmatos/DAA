@@ -45,8 +45,8 @@ def drop_duplicate(df):
         lvs = len(vs)
 
         for i in range(lvs):
-            for j in range(i+1,lvs):
-                if vs[i] == vs[j]: 
+            for j in range(i+1, lvs):
+                if vs[i] == vs[j]:
                     dups.append(ks[i])
                     break
 
@@ -78,7 +78,7 @@ def preprocess(original_df: DataFrame, mode="normal"):
 
         # split data
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=987654321)
+            X, y, test_size=0.2, random_state=987654321, stratify=y)
 
         # apply standard scaling
         X_train = pd.DataFrame(scaler.fit_transform(
@@ -97,6 +97,9 @@ def preprocess(original_df: DataFrame, mode="normal"):
 
         return df
     elif mode == "all":
+        # drop duplicate rows
+        df.drop_duplicates(inplace=True)
+        
         # separate features and target
         X = df.drop('Transition', axis=1)
         y = df['Transition']
