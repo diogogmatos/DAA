@@ -67,9 +67,63 @@ def prepare_test_data(X):
     return test_dl
 
 
-class MLP(Module):
+class MLP_funnel(Module):
     def __init__(self, n_inputs, num_classes):
-        super(MLP, self).__init__()
+        super(MLP_funnel, self).__init__()
+        
+        # 1st layer
+        self.hidden0 = Linear(n_inputs, 1024)
+        kaiming_uniform_(self.hidden0.weight, nonlinearity='relu')
+        self.act0 = ReLU()
+        
+        self.hidden1 = Linear(1024, 512)
+        kaiming_uniform_(self.hidden1.weight, nonlinearity='relu')
+        self.act1 = ReLU()
+        
+        self.hidden1_1 = Linear(512, 512)
+        kaiming_uniform_(self.hidden1_1.weight, nonlinearity='relu')
+        self.act1_1 = ReLU()        
+        
+        self.hidden1_2 = Linear(512, 512)
+        kaiming_uniform_(self.hidden1_2.weight, nonlinearity='relu')
+        self.act1_2 = ReLU()
+        
+        # 2nd layer
+        self.hidden2 = Linear(512, 256)
+        kaiming_uniform_(self.hidden2.weight, nonlinearity='relu')
+        self.act2 = ReLU()
+        # 3rd layer
+        self.hidden3 = Linear(256, 128)
+        kaiming_uniform_(self.hidden3.weight, nonlinearity='relu')
+        self.act3 = ReLU()
+        # 4th layer
+        self.hidden4 = Linear(128, num_classes)
+        xavier_uniform_(self.hidden4.weight)
+        self.act4 = Softmax(dim=1)
+
+    def forward(self, X):
+        X = self.hidden0(X)
+        X = self.act0(X)
+
+        # 1st layer
+        X = self.hidden1(X)
+        X = self.act1(X)
+        
+        X = self.hidden1_1(X)
+        X = self.act1_1(X)
+        X = self.hidden1_2(X)
+        X = self.act1_2(X)
+        # 2nd layer
+        X = self.hidden2(X)
+        X = self.act2(X)
+        # 3rd layer
+        X = self.hidden3(X)
+        X = self.act3(X)
+        return X
+    
+class MLP_funnel(Module):
+    def __init__(self, n_inputs, num_classes):
+        super(MLP_funnel, self).__init__()
 
         # 1st layer
         self.hidden1 = Linear(n_inputs, 512)
@@ -99,9 +153,10 @@ class MLP(Module):
         X = self.hidden3(X)
         X = self.act3(X)
         return X
-    
 
-def train_model(train_dl: DataLoader, test_dl: DataLoader, model: MLP, epochs=EPOCHS, lr=LEARNING_RATE, patience=5):
+
+
+def train_model(train_dl: DataLoader, test_dl: DataLoader, model: MLP_funnel, epochs=EPOCHS, lr=LEARNING_RATE, patience=5):
     # Initialize metrics and setup Matplotlib
     epoch_count = []
     train_losses = []
@@ -224,4 +279,4 @@ def get_predictions(model, df_test: DataFrame):
 
 
 def mlp(n_inputs, num_classes):
-    return MLP(n_inputs, num_classes)
+    return MLP_funnel(n_inputs, num_classes)
