@@ -6,6 +6,8 @@ from sklearn.ensemble import GradientBoostingClassifier, BaggingClassifier, Stac
 from sklearn.linear_model import LogisticRegression
 from xgboost.sklearn import XGBClassifier
 from sklearn.metrics import f1_score, make_scorer, classification_report
+import pickle
+import settings
 
 
 def train_grid_search_cv(model_name, model, param_grid, X_train, y_train, X_test, y_test, X, y):
@@ -35,8 +37,12 @@ def train_grid_search_cv(model_name, model, param_grid, X_train, y_train, X_test
     best_estimator = grid_search.best_estimator_
     best_estimator.fit(X, y.values.ravel())
     print("Done.")
+
+    # cache best estimator
+    with open(f"data/best_estimator_{model_name.lower().replace(' ', '_')}.pkl", "wb") as file:
+        file.write(pickle.dumps(best_estimator))
     
-    return best_estimator, f1, classification_report(y_test,y_pred,output_dict=True),grid_search.best_params_
+    return best_estimator, f1, classification_report(y_test,y_pred,output_dict=True), grid_search.best_params_
 
 def train(model_name, model, X_train, y_train, X_test, y_test, X, y):
     print(f"Training {model_name} model...")
@@ -84,9 +90,9 @@ def bagging(model):
     bagging_model = BaggingClassifier(
         estimator=model, random_state=987654321, n_jobs=-1)
     param_grid = {
-        'n_estimators': [10, 50, 100],
-        'max_samples': [0.5, 1.0],
-        'max_features': [0.5, 1.0],
+        'n_estimators': [100, 150, 200],
+        'max_samples': [0.2, 0.5, 1.0],
+        'max_features': [0.05, 0.1, 0.2],
         'bootstrap': [True, False],
         'bootstrap_features': [True, False]
     }
@@ -111,7 +117,7 @@ def random_forest():
 def gradient_boosting():
     gbc_model = GradientBoostingClassifier(random_state=987654321)
     param_grid = {
-        'n_estimators': [200, 250, 300],
+        'n_estimators': [150, 200, 250],
         'max_features': ['sqrt', 'log2'],
         'criterion': ['friedman_mse', 'squared_error'],
         'max_depth': [2, 4, 6],
@@ -130,11 +136,24 @@ def xgboost():
 
     return xgb_model, param_grid
 
+# Logistic Regression
+def logistic_regression():
+    lr_model = LogisticRegression(max_iter=1000000, n_jobs=-1)
+    param_grid = {
+        'tol': [1e-4, 1e-3, 1e-2],
+        'C': [0.1, 0.5, 1.0],
+        'solver': ['lbfgs', 'liblinear', 'newton-cg', 'newton-cholesky', 'sag', 'saga'],
+        'multi_class': ['auto', 'ovr', 'multinomial'],
+        'fit_intercept': [True, False],
+    }
+
+    return lr_model, param_grid
+
 # Stacking Classifier
-def stacking(model1, model2, model3):
-    estimators = [("model1", model1), ("model2", model2), ("model3", model3)]
+def stacking(models, estimator):
+    estimators = [(f"model{n}", m) for n, m in enumerate(models)]
     st_model = StackingClassifier(
-        estimators=estimators, final_estimator=LogisticRegression(max_iter=1000000, n_jobs=-1), n_jobs=-1, cv=5)
+        estimators=estimators, final_estimator=estimator, n_jobs=-1, cv=5)
     param_grid = {
         'stack_method': ['auto', 'predict'],
     }

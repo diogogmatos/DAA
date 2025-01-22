@@ -1,0 +1,5 @@
+C:1.0
+fit_intercept:True
+multi_class:auto
+solver:lbfgs
+tol:0.0001

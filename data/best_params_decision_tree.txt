@@ -1,7 +1,7 @@
-criterion:gini
+criterion:entropy
 max_depth:8
 max_features:sqrt
 max_leaf_nodes:1000
 min_samples_leaf:1
-min_samples_split:6
-splitter:random
+min_samples_split:4
+splitter:best

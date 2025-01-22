@@ -26,7 +26,7 @@ from simple_term_menu import TerminalMenu
 
 
 import settings
-from models import decision_tree, svm, bagging, random_forest, gradient_boosting, xgboost, stacking, train_grid_search_cv, train
+from models import decision_tree, svm, bagging, random_forest, gradient_boosting, xgboost, stacking, logistic_regression, train_grid_search_cv
 from preprocessing import preprocess, feature_selection_balancing
 import ann as neural_network
 
@@ -46,8 +46,9 @@ def execute(selected_option, selected_models, ann=False):
         "s" if len(selected_models) > 1 else ""}...\n")
 
     print(Fore.BLUE + "⏳ Loading datasets...")
-    df_train = pd.read_csv('datasets/train_radiomics_hipocamp.csv')
-    df_test = pd.read_csv('datasets/test_radiomics_hipocamp.csv')
+    df_train = pd.read_csv('datasets/train_radiomics_occipital_CONTROL.csv')
+    df_test = pd.read_csv('datasets/train_radiomics_occipital_CONTROL.csv')
+    df_test.drop('Transition', axis=1, inplace=True)
     print()
 
     print(Fore.BLUE + "🪄 Preprocessing datasets...")
@@ -67,13 +68,23 @@ def execute(selected_option, selected_models, ann=False):
         if ann:
             model = model_function(X.shape[1], len(le.classes_))
             train_dl, test_dl = neural_network.prepare_train_data(X, y, 0.33)
-            model, score = neural_network.train_model(train_dl, test_dl, model, epochs=50, lr=0.001)
+            model, score = neural_network.train_model(
+                train_dl, test_dl, model, epochs=50, lr=0.001)
             model_results[model_name] = [model, score]
         else:
-            model, param_grid = model_function()
-            model, score,_,_ = train_grid_search_cv(
-                model_name, model, param_grid, X_train, y_train, X_test, y_test, X, y)
-            model_results[model_name] = [model, score]
+            if (model_name == "Bagging"):
+                svm_model, params = svm()
+                svm_model_trained, _, _, _ = train_grid_search_cv(
+                    'SVM', svm_model, params, X_train, y_train, X_test, y_test, X, y)
+                model, param_grid = model_function(svm_model_trained)
+                model, score, _, _ = train_grid_search_cv(
+                    model_name, model, param_grid, X_train, y_train, X_test, y_test, X, y)
+                model_results[model_name] = [model, score]
+            else:
+                model, param_grid = model_function()
+                model, score, _, _ = train_grid_search_cv(
+                    model_name, model, param_grid, X_train, y_train, X_test, y_test, X, y)
+                model_results[model_name] = [model, score]
         print()
     print()
 
@@ -88,16 +99,18 @@ def execute(selected_option, selected_models, ann=False):
     if len(selected_models) >= 3:
         model_options = ["Yes", "No"]
         menu = TerminalMenu(
-            model_options, title="Stack top 3 best performing models?")
+            model_options, title="Stack selected models?")
         index = menu.show()
         stack = model_options[index] == "Yes"
 
         if stack:
             print(Fore.BLUE + "🔀 Stacking top 3 models..." + Fore.WHITE)
-            top1, top2, top3 = list(model_results.items())[:3]
-            stack, param_grid = stacking(
-                top1[1][0], top2[1][0], top3[1][0])
-            stack, stack_score,_,_ = train_grid_search_cv(
+            lr_model, params = logistic_regression()
+            lr_model_trained, _, _, _ = train_grid_search_cv(
+                'Logistic Regression', lr_model, params, X_train, y_train, X_test, y_test, X, y)
+            models = [m[0] for m in model_results.values()]
+            stack, param_grid = stacking(models, lr_model_trained)
+            stack, stack_score, _, _ = train_grid_search_cv(
                 'Stacking', stack, param_grid, X_train, y_train, X_test, y_test, X, y)
             model_results['stacking'] = [stack, stack_score]
             print()
@@ -146,7 +159,8 @@ def run_models():
             "Random Forest": random_forest,
             "XGBoost": xgboost,
             "SVM": svm,
-            "Gradient Boosting": gradient_boosting
+            "Gradient Boosting": gradient_boosting,
+            "Bagging": bagging
         },
         "Fast": {
             "Decision Tree": decision_tree,
@@ -173,7 +187,7 @@ def run_models():
         back1 = selected_option == "<-"
 
         if not back1:
-            if single:               
+            if single:
                 back2 = False
                 while not back2:
                     model_options = [k for k in models.keys()]
@@ -183,10 +197,11 @@ def run_models():
 
                     if not 0 in indexes or indexes == None:
                         for index in indexes:
-                            selected_models[model_options[index-1]] = models[model_options[index-1]]
+                            selected_models[model_options[index-1]
+                                            ] = models[model_options[index-1]]
                         selected_option = ", ".join(selected_models.keys())
                         execute(selected_option, selected_models)
-                    else:   
+                    else:
                         back2 = True
             else:
                 selected_models = groups[selected_option]
@@ -229,7 +244,8 @@ def run_ann_models():
 
                     if not 0 in indexes or indexes == None:
                         for index in indexes:
-                            selected_models[model_options[index-1]] = models[model_options[index-1]]
+                            selected_models[model_options[index-1]
+                                            ] = models[model_options[index-1]]
                         selected_option = ", ".join(selected_models.keys())
                         execute(selected_option, selected_models, ann=True)
                     else:
@@ -237,7 +253,6 @@ def run_ann_models():
             else:
                 selected_models = groups[selected_option]
                 execute(selected_option, selected_models, ann=True)
-
 
 
 def main():
