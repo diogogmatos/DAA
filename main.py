@@ -35,15 +35,13 @@ def model_comparisson(model_results):
     print(Fore.BLUE + "📊 Model comparison (F1):")
     i = 1
     for name, model_score in model_results.items():
-        print(Fore.WHITE + f"{i}. {name.capitalize()
-                                   }: {model_score[1]:.2f}")
+        print(Fore.WHITE + f"{i}. {name.capitalize()}: {model_score[1]:.2f}")
         i += 1
     print()
 
 
 def execute(selected_option, selected_models, ann=False):
-    print(Fore.MAGENTA + f"🚀 Running {selected_option} model{
-        "s" if len(selected_models) > 1 else ""}...\n")
+    print(Fore.MAGENTA + f'🚀 Running {selected_option} model{"s" if len(selected_models) > 1 else ""}...\n')
 
     print(Fore.BLUE + "⏳ Loading datasets...")
     df_train = pd.read_csv('datasets/train_radiomics_hipocamp.csv')
