@@ -23,9 +23,10 @@ def drop_constant(df):
     df.drop(drop, axis=1, inplace=True)
     return df
 
+
 def drop_unique(df):
     "drop categorical columns that always have unique values"
-    
+
     unique_dict = df.nunique().to_dict()
     all_unique = [col for col, count in unique_dict.items(
     ) if count == df.shape[0] and df[col].dtype == 'object']
@@ -98,7 +99,7 @@ def preprocess(original_df: DataFrame, mode="normal"):
     elif mode == "all":
         # drop duplicate rows
         df.drop_duplicates(inplace=True)
-        
+
         # separate features and target
         X = df.drop('Transition', axis=1)
         y = df['Transition']
@@ -121,14 +122,14 @@ def rfe(X_train, X_test, y_train, y_test, X, y, df_test: DataFrame, N: int | flo
             with open('data/rfecv_selected_features.txt', 'r') as file:
                 selected_features = file.read().splitlines()
                 print("- 📁 Found cached selection.")
-                print(Fore.YELLOW + f"- 🧹 Removed {X_train.shape[1] - len(selected_features)} features (New total: {len(selected_features)}).")
+                print(Fore.YELLOW + f"- 🧹 Removed {X_train.shape[1] - len(
+                    selected_features)} features (New total: {len(selected_features)}).")
         except FileNotFoundError:
             pass
 
     if not selected_features:
         print()
-        rf_model = RandomForestClassifier(
-            max_depth=6, max_features='sqrt', n_estimators=200, random_state=987654321, n_jobs=-1)
+        rf_model = RandomForestClassifier(criterion="gini", max_depth=8, max_features='sqrt', n_estimators=150, min_samples_leaf=1, min_samples_split=6, random_state=987654321, n_jobs=-1)
         model, _ = train('Random Forest', rf_model, X_train,
                          y_train, X_test, y_test, X, y)
 
@@ -137,7 +138,8 @@ def rfe(X_train, X_test, y_train, y_test, X, y, df_test: DataFrame, N: int | flo
                     scoring='f1_macro', n_jobs=-1)
         rfe.fit(X_train, y_train)
 
-        print(Fore.YELLOW + f"- 🧹 Removed {X_train.shape[1] - rfe.n_features_} features (New total: {rfe.n_features_}).")
+        print(Fore.YELLOW + f"- 🧹 Removed {
+              X_train.shape[1] - rfe.n_features_} features (New total: {rfe.n_features_}).")
 
         selected_features = X_train.columns[rfe.support_]
 
@@ -154,8 +156,8 @@ def rfe(X_train, X_test, y_train, y_test, X, y, df_test: DataFrame, N: int | flo
     return X_train_rfe, X_test_rfe, X_rfe, df_test_rfe
 
 
-def feature_selection_balancing(X_train, X_test, y_train, y_test, X, y, df_test,arg_settings = {}):
-    if   "RFECV" in arg_settings if arg_settings else "RFECV" in settings.SELECTED  :
+def feature_selection_balancing(X_train, X_test, y_train, y_test, X, y, df_test, arg_settings={}):
+    if "RFECV" in arg_settings if arg_settings else "RFECV" in settings.SELECTED:
         print(Fore.BLUE + "> 🧐 Performing Recursive Feature Elimination..." + Fore.WHITE)
         X_train_rfe, X_test_rfe, X_rfe, df_test_rfe = rfe(
             X_train, X_test, y_train, y_test, X, y, df_test, 0.7)
@@ -182,7 +184,8 @@ def feature_selection_balancing(X_train, X_test, y_train, y_test, X, y, df_test,
         X_test_pca = pca.transform(X_test)
         df_test_pca = pca.transform(df_test)
         X_pca = pca.transform(X)
-        print(Fore.YELLOW + f"- 🧹 Reduced {X_train.shape[1] - pca.n_components_} features (New total: {pca.n_components_}).")
+        print(Fore.YELLOW + f"- 🧹 Reduced {
+              X_train.shape[1] - pca.n_components_} features (New total: {pca.n_components_}).")
         X_train = pd.DataFrame(X_train_pca)
         X_test = pd.DataFrame(X_test_pca)
         df_test = pd.DataFrame(df_test_pca)

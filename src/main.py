@@ -44,9 +44,8 @@ def execute(selected_option, selected_models, ann=False):
     print(Fore.MAGENTA + f'🚀 Running {selected_option} model{"s" if len(selected_models) > 1 else ""}...\n')
 
     print(Fore.BLUE + "⏳ Loading datasets...")
-    df_train = pd.read_csv('datasets/train_radiomics_occipital_CONTROL.csv')
-    df_test = pd.read_csv('datasets/train_radiomics_occipital_CONTROL.csv')
-    df_test.drop('Transition', axis=1, inplace=True)
+    df_train = pd.read_csv('datasets/train_radiomics_hipocamp.csv')
+    df_test = pd.read_csv('datasets/test_radiomics_hipocamp.csv')
     print()
 
     print(Fore.BLUE + "🪄 Preprocessing datasets...")
